@@ -1,45 +1,53 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import {SearchBar} from './assets/SearchBar';
-
+import SearchBar from './assets/SearchBar';
 
 function Weather() {
+
   const [weatherData, setWeatherData] = useState(null);
-  const [location, Setlocation] = useState(null);
-  const [submit, Setsubmit] = useState(false);
-  const [temperature, Settemperature] = useState(null);
-  const [humidity, Sethumidity] = useState(null);
-  const [wind, Setwind] = useState(null);
-  const [weatherCondition, SetweatherCondition] = useState(null);
+  const [location, setLocation] = useState(null);
+  const [city, setCity] = useState(null);
+  const [submit, setSubmit] = useState(false);
+  const [temperature, setTemperature] = useState(null);
+  const [humidity, setHumidity] = useState(null);
+  const [wind, setWind] = useState(null);
+  const [weatherCondition, SetWeatherCondition] = useState(null);
 
-  const  [error, Seterror] = useState(null);
-  const [loading, Setloading] = useState(false);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const API_KEY = process.env.API_KEY;
+  const API_KEY = import.meta.env.VITE_API_KEY;
 
   useEffect(() => {
-    const fetchWeatherData = async () => 
-      {
-      try {
-        const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`, {
-        });
-        setWeatherData(response.data);
-      } catch (error) {
-        console.error('Error fetching weather data:', error);
-      }
-    };
-
-    fetchWeatherData();
-  }, [location]);
-
-  const SearchBar = ({search}) =>{
-    const handleSubmit = (event) => {
-      const city = event.target.value;
+    if (location) {
+      fetchWeatherData(location);
+    }
+  }, [location, API_KEY]);
 
 
-  }
+  const fetchWeatherData = async (location) => {
+    if (!location) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${API_KEY}&units=metric`
+      );
+      setWeatherData(response.data);
+      // Set other state variables from response.data
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+      setError('Failed to fetch weather data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
+  const handleOnSearchChange = (searchdata) => {
+    setLocation(searchdata);
+  };
 
   return (
     <div className="dashboard">
@@ -48,16 +56,7 @@ function Weather() {
           <div className="location">
             <span className="city-name">{location}</span>
           </div>
-          <div className="search-bar">
-            {
-              <input
-              type = 'text'
-              placeholder = 'Search for a city'
-              value = {location}>
-
-              </input>
-            }
-          </div>
+          <SearchBar onSearch={handleOnSearchChange} />
         </header>
 
         <div className="main-content">
@@ -112,7 +111,6 @@ function Weather() {
       </div>
     </div>
   );
-
 
 }
 
