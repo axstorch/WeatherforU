@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import {SearchBar} from './assets/SearchBar';
+
 
 function Weather() {
   const [weatherData, setWeatherData] = useState(null);
@@ -13,17 +15,13 @@ function Weather() {
   const  [error, Seterror] = useState(null);
   const [loading, Setloading] = useState(false);
 
+  const API_KEY = process.env.API_KEY;
 
   useEffect(() => {
     const fetchWeatherData = async () => 
       {
       try {
-        const response = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
-          params: {
-            q: 'Oklahoma City',
-            appid: 'YOUR_API_KEY',
-            units: 'metric'
-          }
+        const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`, {
         });
         setWeatherData(response.data);
       } catch (error) {
@@ -34,9 +32,10 @@ function Weather() {
     fetchWeatherData();
   }, [location]);
 
-  const SearchBar = ({data, onSearch}) =>
-  {
-    
+  const SearchBar = ({search}) =>{
+    const handleSubmit = (event) => {
+      const city = event.target.value;
+
 
   }
 
@@ -47,15 +46,15 @@ function Weather() {
       <div className="glass-card">
         <header>
           <div className="location">
-            <span className="city-name">Oklahoma City</span>
-            <span className="country">USA</span>
+            <span className="city-name">{location}</span>
           </div>
           <div className="search-bar">
             {
-              <input>
+              <input
               type = 'text'
               placeholder = 'Search for a city'
-              value = {location}
+              value = {location}>
+
               </input>
             }
           </div>
@@ -117,4 +116,4 @@ function Weather() {
 
 }
 
-export default WeatherDashboard;
+export default Weather;
