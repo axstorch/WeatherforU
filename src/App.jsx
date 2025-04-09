@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import SearchBar from './assets/SearchBar';
+import './App.css'
 
 function Weather() {
 
   const [weatherData, setWeatherData] = useState(null);
   const [location, setLocation] = useState(null);
-  const [city, setCity] = useState(null);
-  const [submit, setSubmit] = useState(false);
+  const [iconUrl, setIconUrl] = useState(false);
   const [temperature, setTemperature] = useState(null);
   const [humidity, setHumidity] = useState(null);
   const [wind, setWind] = useState(null);
-  const [weatherCondition, SetWeatherCondition] = useState(null);
+  const [weatherDescr, setWeatherDescr] = useState(null);
+  const [iconCode, setIconCode] = useState(null);
+  const [weatherCode, setWeatherCode] = useState(null);
 
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -25,6 +27,77 @@ function Weather() {
   }, [location, API_KEY]);
 
 
+  useEffect(() => {
+    if (!weatherCode) return;
+
+    let imageUrl = '';
+
+    if (weatherCode >= 200 && weatherCode <= 232) {
+      import('./assets/Images/thunderstorm.jpg')
+        .then((module) => {
+          const imageUrl = module.default;
+          document.body.style.backgroundImage = `url(${imageUrl})`;
+        });
+    }
+
+    else if (weatherCode >= 500 && weatherCode <= 531) {
+      import('./assets/Images/rainy.jpg')
+        .then((module) => {
+          const imageUrl = module.default;
+          document.body.style.backgroundImage = `url(${imageUrl})`;
+        });
+    }
+
+    else if (weatherCode >= 600 && weatherCode <= 622) {
+      import('./assets/Images/snowy.jpg')
+        .then((module) => {
+          const imageUrl = module.default;
+          document.body.style.backgroundImage = `url(${imageUrl})`;
+        });
+    }
+    else if (weatherCode === 800) {
+      import('./assets/Images/clear.jpg')
+        .then((module) => {
+          const imageUrl = module.default;
+          document.body.style.backgroundImage = `url(${imageUrl})`;
+        });
+    }
+
+    else if (weatherCode === 721) {
+      import('./assets/Images/haze.jpg')
+        .then((module) => {
+          const imageUrl = module.default;
+          document.body.style.backgroundImage = `url(${imageUrl})`;
+        });
+    }
+
+    else if (weatherCode > 800 && weatherCode <= 804) {
+      import('./assets/Images/Cloudy.jpg')
+        .then((module) => {
+          const imageUrl = module.default;
+          document.body.style.backgroundImage = `url(${imageUrl})`;
+        });
+    }
+
+  }, [weatherCode]);
+
+  const updateSearchHistory = (searchdata) => {
+    const filteredHistory = searchHistory.filter(item => item !== searchdata);
+    
+    const newHistory = [searchdata, ...filteredHistory];
+    
+    const limitedHistory = newHistory.slice(0, 5);
+    
+    setSearchHistory(limitedHistory);
+    localStorage.setItem('searchHistory', JSON.stringify(limitedHistory));
+  };
+
+  const handleRefresh = () => {
+    if (location) {
+      fetchWeatherData(location);
+    }
+  };
+
   const fetchWeatherData = async (location) => {
     if (!location) return;
 
@@ -35,8 +108,21 @@ function Weather() {
         `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${API_KEY}&units=metric`
       );
       setWeatherData(response.data);
-      // Set other state variables from response.data
+
+      setTemperature(response.data.main.temp);
+      setHumidity(response.data.main.humidity);
+      setWind(response.data.wind.speed);
+      setWeatherDescr(response.data.weather[0].description);
+      setWeatherCode(response.data.weather[0].id);
+
+      const iconCode = response.data.weather[0].icon;
+      setIconCode(iconCode);
+      const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+      setIconUrl(iconUrl);
+
+
     } catch (error) {
+      Alert.alert('Please recheck the spelling');
       console.error('Error fetching weather data:', error);
       setError('Failed to fetch weather data');
     } finally {
@@ -47,6 +133,7 @@ function Weather() {
 
   const handleOnSearchChange = (searchdata) => {
     setLocation(searchdata);
+    updateSearchHistory(searchdata);
   };
 
   return (
@@ -58,55 +145,47 @@ function Weather() {
           </div>
           <SearchBar onSearch={handleOnSearchChange} />
         </header>
+        <button className="refresh-button" onClick={handleRefresh} type="button">
+          refresh
+        </button>
+
+        <div className="search-history">
+  {searchHistory.length > 0 && (
+    <>
+      <h3>Recent Searches:</h3>
+      <div className="history-buttons">
+        {searchHistory.map((item, index) => (
+          <button 
+            key={item + index} 
+            className="history-button"
+            onClick={() => handleOnSearchChange(item)}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+    </>
+  )}
+</div>
+
 
         <div className="main-content">
           <div className="left-panel">
             <div className="temperature-display">
-              <h1>20°</h1>
-              <span className="variation">±3</span>
+              <h1> temperature: {temperature}°C</h1>
             </div>
-            <div className="humidity">9.8%</div>
+            <div className="weatherIcon">
+              <img src={iconUrl} alt="Weather Icon" />
+            </div>
+            <div className="weather-description">
+              <h2>Weather: {weatherDescr}</h2>
+            </div>
+            <div className="humidity">Humidity: {humidity}%</div>
             <div className="wind">
-              <span>Wind: WSW 6mph</span>
-            </div>
-            <div className="risk-indicator">
-              <div className="safe">
-                <span>0.00% - 0.9%</span>
-                <span>0.9% - 11%</span>
-              </div>
-              <div className="dangerous">
-                <span>12% - 38%</span>
-                <span>39% - 90%</span>
-              </div>
+              <span>Wind speed: {wind} Km/hr
+              </span>
             </div>
           </div>
-
-          <div className="right-panel">
-            <div className="weather-forecast">
-              <h2>Storm with Heavy Rain</h2>
-              <div className="forecast-details">
-                <span>USA, Friday, Jan 3, 2023, 8:45AM</span>
-                <p>Variable clouds with snow showers. High 11F. Winds E at 10 to 20 mph. Chance of snow 50%. Snow accumulations less than one inch.</p>
-              </div>
-              <div className="temperature-details">17°</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="temperature-graph">
-          {/* Implement chart using react-chartjs-2 */}
-        </div>
-
-        <div className="cities-comparison">
-          <div className="city">
-            <span className="temp">20°</span>
-            <span className="name">Washington D.C.</span>
-          </div>
-          <div className="city">
-            <span className="temp">17°</span>
-            <span className="name">Oklahoma City</span>
-          </div>
-          {/* More cities */}
         </div>
       </div>
     </div>
