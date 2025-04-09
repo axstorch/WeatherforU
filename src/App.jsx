@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import SearchBar from './assets/SearchBar';
 import './App.css'
+import { DarkModeSwitch } from 'react-toggle-dark-mode';
+
 
 function Weather() {
 
@@ -25,6 +27,21 @@ function Weather() {
       fetchWeatherData(location);
     }
   }, [location, API_KEY]);
+
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedMode = localStorage.getItem('darkMode');
+    return savedMode ? JSON.parse(savedMode) : false;
+  });
+
+  const toggleDarkMode = (checked) => {
+    setDarkMode(checked);
+    localStorage.setItem('darkMode', JSON.stringify(checked));
+    document.body.classList.toggle('dark-mode', checked);
+  };
+
+  useEffect(() => {
+    document.body.classList.toggle('dark-mode', darkMode);
+  }, [darkMode]);
 
 
   useEffect(() => {
@@ -81,13 +98,18 @@ function Weather() {
 
   }, [weatherCode]);
 
+  const [searchHistory, setSearchHistory] = useState(() => {
+    const savedHistory = localStorage.getItem('searchHistory');
+    return savedHistory ? JSON.parse(savedHistory) : [];
+  });
+
   const updateSearchHistory = (searchdata) => {
     const filteredHistory = searchHistory.filter(item => item !== searchdata);
-    
+
     const newHistory = [searchdata, ...filteredHistory];
-    
+
     const limitedHistory = newHistory.slice(0, 5);
-    
+
     setSearchHistory(limitedHistory);
     localStorage.setItem('searchHistory', JSON.stringify(limitedHistory));
   };
@@ -96,6 +118,7 @@ function Weather() {
     if (location) {
       fetchWeatherData(location);
     }
+    console.log('Refresh button clicked');
   };
 
   const fetchWeatherData = async (location) => {
@@ -122,14 +145,13 @@ function Weather() {
 
 
     } catch (error) {
-      Alert.alert('Please recheck the spelling');
+      alert('Please recheck the spelling');
       console.error('Error fetching weather data:', error);
       setError('Failed to fetch weather data');
     } finally {
       setLoading(false);
     }
   };
-
 
   const handleOnSearchChange = (searchdata) => {
     setLocation(searchdata);
@@ -145,28 +167,37 @@ function Weather() {
           </div>
           <SearchBar onSearch={handleOnSearchChange} />
         </header>
+        <div className="dark-mode-toggle">
+          <DarkModeSwitch
+            checked={darkMode}
+            onChange={toggleDarkMode}
+            size={24}
+            moonColor="#f5f5f5"
+            sunColor="#f5f5f5" />
+        </div>
         <button className="refresh-button" onClick={handleRefresh} type="button">
           refresh
         </button>
 
+
         <div className="search-history">
-  {searchHistory.length > 0 && (
-    <>
-      <h3>Recent Searches:</h3>
-      <div className="history-buttons">
-        {searchHistory.map((item, index) => (
-          <button 
-            key={item + index} 
-            className="history-button"
-            onClick={() => handleOnSearchChange(item)}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-    </>
-  )}
-</div>
+          {searchHistory.length > 0 && (
+            <>
+              <h3>Recent Searches:</h3>
+              <div className="history-buttons">
+                {searchHistory.map((item, index) => (
+                  <button
+                    key={item + index}
+                    className="history-button"
+                    onClick={() => handleOnSearchChange(item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
 
 
         <div className="main-content">
